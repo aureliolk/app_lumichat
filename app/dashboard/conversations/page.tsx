@@ -11,10 +11,18 @@ export const metadata: Metadata = {
   description: "Visualize e responda às suas conversas",
 };
 
+// Função auxiliar para obter valores seguros de searchParams
+async function getSearchParam(params: any, key: string, defaultValue: string = ""): Promise<string> {
+  // Se params for uma Promise, espere por ela
+  const resolvedParams = params instanceof Promise ? await params : params;
+  // Se o valor for undefined ou null, retorne o valor padrão
+  return (resolvedParams && resolvedParams[key]) || defaultValue;
+}
+
 export default async function ConversationsPage({
   searchParams,
 }: {
-  searchParams: { id?: string; status?: string };
+  searchParams: { id?: string; status?: string } | Promise<{ id?: string; status?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -22,8 +30,9 @@ export default async function ConversationsPage({
     redirect("/login");
   }
 
-  const status = searchParams.status || "OPEN";
-  const conversationId = searchParams.id;
+  // Obtenha os parâmetros de forma assíncrona
+  const status = await getSearchParam(searchParams, "status", "OPEN");
+  const conversationId = await getSearchParam(searchParams, "id", "");
 
   return (
     <div className="flex h-[calc(100vh-64px)]">
